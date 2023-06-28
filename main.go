@@ -8,11 +8,12 @@ import (
 	"strings"
 )
 
+// Entry point of the app.
 func main() {
 	newBill := createBill()
 	promptOptions(newBill)
 
-	fmt.Println(newBill)
+	// fmt.Println(newBill.format())
 }
 
 func createBill() bill {
@@ -26,9 +27,9 @@ func createBill() bill {
 	return b
 }
 
-func getInput(prompt string, r *bufio.Reader) (string, error) {
+func getInput(prompt string, reader *bufio.Reader) (string, error) {
 	fmt.Print(prompt)
-	input, err := r.ReadString('\n')
+	input, err := reader.ReadString('\n')
 
 	return strings.TrimSpace(input), err
 }
@@ -43,22 +44,36 @@ func promptOptions(b bill) {
 		name, _ := getInput("Item name: ", reader)
 		price, _ := getInput("Item price: ", reader)
 
-		conv, _ := strconv.ParseFloat(price, 64)
+		priceFloat, err := strconv.ParseFloat(price, 64)
 
-		b.addItem(name, conv)
+		if err != nil {
+			fmt.Println("The price must be a number.")
+			promptOptions(b)
+		} else {
+			b.addItem(name, priceFloat)
+			fmt.Printf("Item added: %v - $%0.2f\n", name, priceFloat)
+			promptOptions(b)
+		}
 
-		fmt.Printf("%v - $%0.2f\n", name, conv)
 	case "s":
-		fmt.Printf("You chose to [%v]save the bill.\n", opt)
+		b.save()
+		fmt.Println("Saved: ", b)
+		fmt.Printf("Bill saved in file: %v\n", b.name+".txt")
 	case "t":
-		tip, _ := getInput("Tip amount: ", reader)
-		tipFloat, _ := strconv.ParseFloat(tip, 64)
+		tip, _ := getInput("Enter tip amount: ", reader)
 
-		b.updateTip(tipFloat)
+		tipFloat, err := strconv.ParseFloat(tip, 64)
 
-		fmt.Printf("You chose to [%v]add tip.\n", opt)
+		if err != nil {
+			fmt.Println("The price must be a number.")
+			promptOptions(b)
+		} else {
+			b.updateTip(tipFloat)
+			fmt.Println("Added tip.")
+			promptOptions(b)
+		}
 	default:
-		fmt.Println("That was not in the options.")
+		fmt.Println("Invalid option.")
 		promptOptions(b)
 	}
 }
